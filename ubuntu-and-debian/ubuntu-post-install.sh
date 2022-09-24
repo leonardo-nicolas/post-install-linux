@@ -95,6 +95,11 @@ if ! [ "$EUID" -ne 0 ]; then
 
 	#Programming languages and compilers
 	#C, C++ & Fortran
+
+  apt install -y cmake;
+  apt install -y extra-cmake-modules;
+  apt install -y build-essential;
+  apt install -y gettext;
 	apt install -y gcc
 	apt install -y g++
 	apt install -y gfortran
@@ -407,6 +412,13 @@ else
     echo -e "MySQL Server on Docker configured!\nServer and port: localhost:3306"
 		echo 'Docker done.'
 	fi
+
+	if ! command -v brew &> /dev/null; then
+	  echo 'Installing Homebrew.'
+	  bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+	  echo "Homebrew installed. Homebrew version: $(brew --version)"
+	fi
+
 	echo
 	echo
 	echo 'Configure your terminal to use any [...]Nerd Font (FiraCode Nerd Font is recommended).'
