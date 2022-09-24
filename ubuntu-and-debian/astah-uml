@@ -1,0 +1,34 @@
+#!/bin/sh
+
+ASTAH_HOME="$(dirname $(readlink -f $0))"
+CLASSPATH="$ASTAH_HOME"/astah-uml.jar
+
+JAVA_OPTS="-Xms16m -Xmx384m"
+JAVA_OPTS="$JAVA_OPTS -Djava.library.path=$ASTAH_HOME/lib/rlm"
+#JAVA_OPTS="$JAVA_OPTS -Duser.language=en"
+#JAVA_OPTS="$JAVA_OPTS -Duser.language=ja"
+#JAVA_OPTS="$JAVA_OPTS -DrootLevel=DEBUG"
+
+IsNumeric() {
+     if [ $# -ne 1 ]; then
+          return 1
+     fi
+
+     expr "$1" + 1 >/dev/null 2>&1
+     if [ $? -ge 2 ]; then
+          return 1
+     fi
+
+     return 0
+}
+JRE_BIN_PATH=$ASTAH_HOME/jdk8u345-b01-jre/bin
+REV=`$JRE_BIN_PATH/java -version 2>&1 | grep "java version" | sed -e "s/.*1\.6\.0_\([0-9]*\)\"/\1/g"`
+if IsNumeric $REV; then
+  if [ $REV -ge 23 ]; then
+    $JRE_BIN_PATH/java $JAVA_OPTS -splash:"$ASTAH_HOME"/astah_splash_uml.png -jar $CLASSPATH "$1" "$2" "$3"
+  else
+    $JRE_BIN_PATH/java $JAVA_OPTS -jar $CLASSPATH "$1" "$2" "$3"
+  fi
+else
+  $JRE_BIN_PATH/java $JAVA_OPTS -splash:"$ASTAH_HOME"/astah_splash_uml.png -jar $CLASSPATH "$1" "$2" "$3"
+fi
