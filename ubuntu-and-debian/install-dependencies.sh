@@ -437,3 +437,5 @@ apt install -y qtdeclarative5-dev;
 apt install -y libnotify-bin;
 apt install -y libkf5kcmutils-dev;
 apt install -y libkf5kio-dev;
+apt install -y libclang-common-13-dev;
+

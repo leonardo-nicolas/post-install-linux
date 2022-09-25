@@ -7,15 +7,14 @@ if ! [ "$EUID" -ne 0 ]; then
 
 	apt install -y curl
 	apt install -y wget
-	apt install -y gnupg
-	apt install -y gnupg2
+	apt install -y gnupg && apt install -y gnupg2
 	apt install -y apt-transport-https
 	apt install -y ca-certificates
 	apt install -y lsb-release
 
 	mkdir -p /etc/apt/keyrings
 	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-	CURRENT_DISTRO="$([[ $(lsb_release -is | tr '[:upper:]' '[:lower:]') == 'debian' ]] && echo 'debian' || echo 'ubuntu-and-debian')"
+	CURRENT_DISTRO="$([[ $(lsb_release -is | tr '[:upper:]' '[:lower:]') == 'debian' ]] && echo 'debian' || echo 'ubuntu')"
 	echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$CURRENT_DISTRO $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 	wget "https://packages.microsoft.com/config/$CURRENT_DISTRO/$(lsb_release -rs)/packages-microsoft-prod.deb" -O packages-microsoft-prod.deb
 	dpkg -i packages-microsoft-prod.deb
@@ -31,7 +30,9 @@ if ! [ "$EUID" -ne 0 ]; then
 	sh -c "echo 'deb [arch=$(dpkg --print-architecture)] https://packages.microsoft.com/repos/vscode stable main' > /etc/apt/sources.list.d/vscode.list"
 	wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
 	sh -c "echo 'deb [arch=$(dpkg --print-architecture)] http://dl.google.com/linux/chrome/deb/ stable main' >> /etc/apt/sources.list.d/google.list"
+	curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
 
+	echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" | tee /etc/apt/sources.list.d/brave-browser-release.list
 	#wget -q -O - http://download.virtualbox.org/virtualbox/debian/oracle_vbox_2016.asc | apt-key add -
 	#sh -c "echo 'deb http://download.virtualbox.org/virtualbox/debian $(lsb_release -cs) non-free contrib' >> /etc/apt/sources.list.d/virtualbox.org.list"
 
@@ -80,7 +81,7 @@ if ! [ "$EUID" -ne 0 ]; then
 	snap install hello-world
 
 	# Docker & Docker Compose
-	apt remove -y docker docker-engine docker.io containerd runc
+	command -v docker &> /dev/null && apt remove -y docker docker-engine docker-compose docker.io containerd runc
 	apt install -y containerd
 	apt install -y docker-ce
 	apt install -y docker-ce-cli
@@ -96,14 +97,19 @@ if ! [ "$EUID" -ne 0 ]; then
 	#Programming languages and compilers
 	#C, C++ & Fortran
 
-  apt install -y cmake;
-  apt install -y extra-cmake-modules;
-  apt install -y build-essential;
-  apt install -y gettext;
+	apt install -y cmake;
+	apt install -y extra-cmake-modules;
+	apt install -y build-essential;
+	apt install -y gettext;
 	apt install -y gcc
 	apt install -y g++
 	apt install -y gfortran
 	apt install -y make
+	apt install -y clang
+	apt install -y heaptrack
+	apt install -y meson
+	apt install -y cppcheck
+	apt install -y clazy
 	apt install -y bison
 	apt install -y flex
 	apt install -y gcc-multilib
@@ -195,7 +201,12 @@ if ! [ "$EUID" -ne 0 ]; then
 	apt install -y nodejs
 	apt install -y gvfs
 
+	# ruby
+	apt install -y ruby-full
+	apt install -y bundler
+
 	# GIT
+	apt install -y git
 	apt install -y gitk
 	apt install -y git-email
 	apt install -y git-cvs
@@ -234,7 +245,6 @@ if ! [ "$EUID" -ne 0 ]; then
 	apt install -y ffmpeg
 	apt install -y autotrace
 	apt install -y software-properties-common
-	apt install -y apt-transport-https
 	apt install -y rpl
 	apt install -y zip
 	apt install -y unzip
@@ -271,26 +281,32 @@ if ! [ "$EUID" -ne 0 ]; then
 	apt install -y microsoft-edge-stable
 	apt install -y anydesk
 	apt install -y dbeaver-ce
+	apt install -y brave-browser
 	apt install -y vlc
 	apt install -y flameshot
 	apt install -y inkscape
 
 
-  # Removing unnecessary runtime of DBeaver
-  rm -rfv /usr/share/dbeaver-ce/jre
+	# Removing unnecessary runtime of DBeaver
+	rm -rfv /usr/share/dbeaver-ce/jre
 
-  # Install Bootstrap Studio
-  chmod -v +x ./install-bs-studio.sh
-  ./install-bs-studio.sh --install -y
+	# Install Bootstrap Studio
+	chmod -v +x ./install-bs-studio.sh
+	./install-bs-studio.sh --install -y
 
 	# Installing Full Astah-UML with custom JRE 8u345
 	wget https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u345-b01/OpenJDK8U-jre_x64_linux_hotspot_8u345b01.tar.gz -O OpenJDK8U-jre_x64_linux_hotspot_8u345b01.tar.gz
 	ar -xv astah-uml_8.5.0.39c620-0_all.deb
 	tar -xzvf data.tar.gz -C /
 	tar -xzvf OpenJDK8U-jre_x64_linux_hotspot_8u345b01.tar.gz -C /usr/lib/astah_uml
-	cp -v astah-uml /usr/lib/astah_uml/astah-uml
+	[ -f /usr/lib/astah_uml/astah-uml ] && rm -v /usr/lib/astah_uml/astah-uml
+	echo 'IyEvYmluL3NoCgpBU1RBSF9IT01FPSIkKGRpcm5hbWUgJChyZWFkbGluayAtZiAkMCkpIgpDTEFTU1BBVEg9IiRBU1RBSF9IT01FIi9hc3RhaC11bWwuamFyCgpKQVZBX09QVFM9Ii1YbXMxNm0gLVhteDM4NG0iCkpBVkFfT1BUUz0iJEpBVkFfT1BUUyAtRGphdmEubGlicmFyeS5wYXRoPSRBU1RBSF9IT01FL2xpYi9ybG0iCiNKQVZBX09QVFM9IiRKQVZBX09QVFMgLUR1c2VyLmxhbmd1YWdlPWVuIgojSkFWQV9PUFRTPSIkSkFWQV9PUFRTIC1EdXNlci5sYW5ndWFnZT1qYSIKI0pBVkFfT1BUUz0iJEpBVkFfT1BUUyAtRHJvb3RMZXZlbD1ERUJVRyIKCklzTnVtZXJpYygpIHsKICAgICBpZiBbICQjIC1uZSAxIF07IHRoZW4KICAgICAgICAgIHJldHVybiAxCiAgICAgZmkKCiAgICAgZXhwciAiJDEiICsgMSA+L2Rldi9udWxsIDI+JjEKICAgICBpZiBbICQ/IC1nZSAyIF07IHRoZW4KICAgICAgICAgIHJldHVybiAxCiAgICAgZmkKCiAgICAgcmV0dXJuIDAKfQpKUkVfQklOX1BBVEg9JEFTVEFIX0hPTUUvamRrOHUzNDUtYjAxLWpyZS9iaW4KUkVWPWAkSlJFX0JJTl9QQVRIL2phdmEgLXZlcnNpb24gMj4mMSB8IGdyZXAgImphdmEgdmVyc2lvbiIgfCBzZWQgLWUgInMvLioxXC42XC4wX1woWzAtOV0qXClcIi9cMS9nImAKaWYgSXNOdW1lcmljICRSRVY7IHRoZW4KICBpZiBbICRSRVYgLWdlIDIzIF07IHRoZW4KICAgICRKUkVfQklOX1BBVEgvamF2YSAkSkFWQV9PUFRTIC1zcGxhc2g6IiRBU1RBSF9IT01FIi9hc3RhaF9zcGxhc2hfdW1sLnBuZyAtamFyICRDTEFTU1BBVEggIiQxIiAiJDIiICIkMyIKICBlbHNlCiAgICAkSlJFX0JJTl9QQVRIL2phdmEgJEpBVkFfT1BUUyAtamFyICRDTEFTU1BBVEggIiQxIiAiJDIiICIkMyIKICBmaQplbHNlCiAgJEpSRV9CSU5fUEFUSC9qYXZhICRKQVZBX09QVFMgLXNwbGFzaDoiJEFTVEFIX0hPTUUiL2FzdGFoX3NwbGFzaF91bWwucG5nIC1qYXIgJENMQVNTUEFUSCAiJDEiICIkMiIgIiQzIgpmaQo=' | base64 -d > /usr/lib/astah_uml/astah-uml
 	chmod -v +x /usr/lib/astah_uml/astah-uml
+
+	echo 'Removing all unecessary files...'
 	rm -v "debian-binary" "*.tar.gz" "*.deb" "microsoft.gpg"
+
+	fc-cache -fv
 
 	# Graphics ans CLI Softwares - Snap Packages
 	snap install intellij-idea-ultimate --classic
@@ -324,10 +340,10 @@ if ! [ "$EUID" -ne 0 ]; then
 	flatpak install -y flathub io.github.shiftey.Desktop
 	flatpak install -y flathub org.gimp.GIMP.flatpakref
 	flatpak install -y flathub io.github.peazip.PeaZip
-  flatpak install -y flathub org.telegram.desktop
+	flatpak install -y flathub org.telegram.desktop
 
 	# NPM CLI Tools
-	npm install --global yarn
+	! command -v yarn &> /dev/nullnpm install --global yarn
 	npm install --global @angular/cli
 	npm install --global @vue/cli
 	npm install --global @nestjs/cli
@@ -342,6 +358,7 @@ if ! [ "$EUID" -ne 0 ]; then
 	reboot now
 
 else
+	fc-cache -fv
 	if command -v dotnet &> /dev/null; then
 		echo "Configuring dotNET for user $(whoami)."
 		./install-dotnet-6.sh
@@ -387,13 +404,15 @@ else
 		echo 'done.'
 	fi
 
-	echo 'Installing RUST complete.'
-	# Rust
-	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
-	chmod -v +x rustup-init.sh
-	./rustup-init.sh -v -y --profile complete
-	rm -v rustup-init.sh
-	echo 'RUST install done.'
+	if ! command -v cargo &> /dev/null
+		echo 'Installing RUST complete.'
+		# Rust
+		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
+		chmod -v +x rustup-init.sh
+		./rustup-init.sh -v -y --profile complete
+		rm -v rustup-init.sh
+		echo 'RUST install done.'
+	fi
 
 	echo "configuring user side, for user $USER"
 	if command -v docker &> /dev/null; then
